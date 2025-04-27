@@ -1,0 +1,55 @@
+# Database Configuration
+neo4j:
+  uri: "neo4j://localhost:7687"
+  user: "neo4j"
+  password: "Password*007"
+  database: "FinancialRisk"
+
+# API Configuration
+api:
+  host: "0.0.0.0"
+  port: 8000
+  debug: true
+  title: "Financial Risk API"
+  version: "1.0.0"
+
+# Model Configuration
+models:
+  anomaly:
+    isolation_forest:
+      contamination: 0.1
+      random_state: 42
+      n_estimators: 100
+  kmeans:
+    n_clusters: 5
+    random_state: 42
+    max_iter: 300
+
+# Feature Engineering
+features:
+  time_features:
+    - hour_of_day
+    - day_of_week
+    - month
+    - is_weekend
+  transaction_features:
+    - amount
+    - frequency
+    - merchant_diversity
+    - velocity
+  window_sizes:
+    - 1d
+    - 7d
+    - 30d
+
+# Security
+security:
+  jwt_secret: "your-secret-key"
+  token_expire_minutes: 30
+  encryption_key: "your-encryption-key"
+
+# Logging
+logging:
+  level: "INFO"
+  format: "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+  file: "logs/financial_risk.log" 
