@@ -3,25 +3,70 @@ from typing import List, Dict, Any, Optional
 import logging
 from datetime import datetime
 from uuid import UUID
+import time
 
 logger = logging.getLogger(__name__)
 
 class GraphDatabase:
-    def __init__(self, uri: str, user: str, password: str, database: str = "financial_risk"):
-        self.graph = Graph(uri, auth=(user, password), name=database)
+    def __init__(self, uri: str, user: str, password: str, database: str = "financial_risk", max_retries: int = 5, retry_delay: int = 3):
+        self.uri = uri
+        self.user = user
+        self.password = password
+        self.database = database
+        self.max_retries = max_retries
+        self.retry_delay = retry_delay
+        self.graph = self._connect_with_retry()
         self._create_constraints()
+
+    def _connect_with_retry(self) -> Graph:
+        """Connect to Neo4j with retry mechanism."""
+        retries = 0
+        last_exception = None
+        
+        while retries < self.max_retries:
+            try:
+                logger.info(f"Attempting to connect to Neo4j at {self.uri}, attempt {retries+1}/{self.max_retries}")
+                graph = Graph(self.uri, auth=(self.user, self.password), name=self.database)
+                # Test connection with a simple query
+                graph.run("RETURN 1")
+                logger.info("Successfully connected to Neo4j")
+                return graph
+            except Exception as e:
+                last_exception = e
+                retries += 1
+                logger.warning(f"Failed to connect to Neo4j: {str(e)}. Retrying in {self.retry_delay} seconds...")
+                time.sleep(self.retry_delay)
+        
+        logger.error(f"Failed to connect to Neo4j after {self.max_retries} attempts: {str(last_exception)}")
+        # Return a placeholder Graph object but mark it as disconnected
+        # This allows the app to start even if Neo4j is down
+        self.is_connected = False
+        return Graph(self.uri, auth=(self.user, self.password), name=self.database)
+
+    def is_connected(self) -> bool:
+        """Check if the database is connected."""
+        try:
+            self.graph.run("RETURN 1")
+            return True
+        except:
+            return False
 
     def _create_constraints(self):
         """Create unique constraints for nodes."""
+        if not self.is_connected():
+            logger.warning("Database not connected, skipping constraint creation")
+            return
+
         try:
             # Create constraints if they don't exist
             self.graph.run("CREATE CONSTRAINT customer_id IF NOT EXISTS FOR (c:Customer) REQUIRE c.id IS UNIQUE")
             self.graph.run("CREATE CONSTRAINT account_id IF NOT EXISTS FOR (a:Account) REQUIRE a.id IS UNIQUE")
             self.graph.run("CREATE CONSTRAINT transaction_id IF NOT EXISTS FOR (t:Transaction) REQUIRE t.id IS UNIQUE")
             self.graph.run("CREATE CONSTRAINT merchant_id IF NOT EXISTS FOR (m:Merchant) REQUIRE m.id IS UNIQUE")
+            logger.info("Successfully created Neo4j constraints")
         except Exception as e:
             logger.error(f"Error creating constraints: {str(e)}")
-            raise
+            # Don't raise - allow the application to continue without constraints
 
     def create_customer(self, customer_data: Dict[str, Any]) -> Node:
         """Create a customer node."""

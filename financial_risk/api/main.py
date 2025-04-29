@@ -1,4 +1,4 @@
-from fastapi import FastAPI, HTTPException, Depends
+from fastapi import FastAPI, HTTPException, Depends, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from financial_risk.utils.data_generator import generate_test_data
 from financial_risk.graph.models import get_or_create_customer, get_or_create_account, get_or_create_merchant
@@ -8,6 +8,8 @@ from datetime import datetime
 import yaml
 from pathlib import Path
 from dateutil.parser import isoparse
+import asyncio
+import json
 
 from ..models.base import Transaction, Customer, Account, Merchant
 from ..models.anomaly.isolation_forest import AnomalyDetector
@@ -152,8 +154,20 @@ async def process_transactions(transactions: List[Transaction]):
         # Convert transactions to dict for processing
         tx_dicts = [tx.dict() for tx in transactions]
         
+        # Log incoming transactions for debugging
+        logger.info(f"Processing {len(tx_dicts)} transactions")
+        for tx in tx_dicts:
+            logger.info(f"Transaction {tx['id']}: amount={tx['amount']}, category={tx['category']}")
+        
         # Detect anomalies
         results = anomaly_detector.predict(tx_dicts)
+        
+        # Log anomaly detection results
+        anomaly_count = sum(1 for tx in results if tx.get('is_anomaly', False))
+        logger.info(f"Anomaly detection results: {anomaly_count} anomalies found out of {len(results)} transactions")
+        for tx in results:
+            logger.info(f"Transaction {tx['id']}: is_anomaly={tx.get('is_anomaly', False)}, " +
+                        f"anomaly_score={tx.get('anomaly_score', 'N/A')}")
         
         # Store in graph database
         for tx in results:
@@ -289,6 +303,116 @@ async def train_models():
     except Exception as e:
         logger.error(f"Error training models: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
+
+@app.get("/health")
+async def health_check():
+    """Health check endpoint to verify system status."""
+    try:
+        # Check Neo4j connection
+        graph_db.graph.run("MATCH (n) RETURN count(n) LIMIT 1")
+        db_status = "connected"
+    except Exception as e:
+        db_status = f"disconnected: {str(e)}"
+    
+    return {
+        "status": "online",
+        "database": db_status,
+        "timestamp": datetime.now().isoformat()
+    }
+
+@app.get("/api/capabilities")
+async def capabilities():
+    """Return a list of available API operations."""
+    return {
+        "endpoints": [
+            {"path": "/dev/generate_and_train", "method": "POST", "description": "Generate and train data"},
+            {"path": "/transactions/process", "method": "POST", "description": "Process transactions"},
+            {"path": "/customers/{customer_id}/behavior", "method": "GET", "description": "Get customer behavior"},
+            {"path": "/merchants/{merchant_id}/risk", "method": "GET", "description": "Get merchant risk"},
+            {"path": "/models/train", "method": "POST", "description": "Train models"},
+            {"path": "/ws", "method": "WebSocket", "description": "Real-time transaction feed"},
+            {"path": "/health", "method": "GET", "description": "API health check"}
+        ]
+    }
+
+@app.websocket("/ws")
+async def websocket_endpoint(websocket: WebSocket):
+    """WebSocket endpoint for real-time transaction updates."""
+    await websocket.accept()
+    try:
+        while True:
+            try:
+                # Check if Neo4j is connected
+                if hasattr(graph_db, 'is_connected') and graph_db.is_connected():
+                    # Fetch the latest 10 transactions from your graph database
+                    query = """
+                    MATCH (t:Transaction)
+                    RETURN t
+                    ORDER BY t.timestamp DESC
+                    LIMIT 10
+                    """
+                    result = graph_db.graph.run(query)
+                    transactions = [dict(record["t"]) for record in result]
+
+                    # Convert timestamps to string for JSON serialization
+                    for tx in transactions:
+                        if hasattr(tx['timestamp'], 'isoformat'):
+                            tx['timestamp'] = tx['timestamp'].isoformat()
+                        elif hasattr(tx['timestamp'], 'to_native'):
+                            tx['timestamp'] = tx['timestamp'].to_native().isoformat()
+                    
+                    # Send real transactions
+                    await websocket.send_text(json.dumps({
+                        "type": "transactions",
+                        "data": transactions,
+                        "timestamp": datetime.now().isoformat(),
+                        "source": "database"
+                    }))
+                else:
+                    # Database not connected, send demo data
+                    import random
+                    from uuid import uuid4
+                    
+                    # Generate demo transactions
+                    demo_transactions = []
+                    current_time = datetime.now()
+                    
+                    for i in range(5):
+                        # Create a demo transaction
+                        demo_tx = {
+                            "id": str(uuid4()),
+                            "customer_id": f"customer_{random.randint(1, 10)}",
+                            "account_id": f"account_{random.randint(1, 20)}",
+                            "merchant_id": f"merchant_{random.randint(1, 5)}",
+                            "amount": round(random.uniform(10, 1000), 2),
+                            "timestamp": (current_time.replace(second=current_time.second-i*30)).isoformat(),
+                            "category": random.choice(["RETAIL", "FOOD", "TRAVEL", "ENTERTAINMENT"]),
+                            "is_anomaly": random.random() < 0.2
+                        }
+                        demo_transactions.append(demo_tx)
+                    
+                    # Send demo transactions
+                    await websocket.send_text(json.dumps({
+                        "type": "transactions",
+                        "data": demo_transactions,
+                        "timestamp": datetime.now().isoformat(),
+                        "source": "demo",
+                        "message": "Using demo data because database is not connected"
+                    }))
+            except Exception as e:
+                # Send error but don't disconnect
+                logger.error(f"Error in WebSocket: {str(e)}")
+                await websocket.send_text(json.dumps({
+                    "type": "error",
+                    "message": str(e),
+                    "timestamp": datetime.now().isoformat()
+                }))
+
+            await asyncio.sleep(2)  # Send updates every 2 seconds
+    except WebSocketDisconnect:
+        logger.info("WebSocket disconnected")
+    except Exception as e:
+        logger.error(f"WebSocket error: {str(e)}")
 
 if __name__ == "__main__":
     import uvicorn

@@ -1,0 +1,102 @@
+[
+  {
+    "id": "27a8a3be-c00b-45e4-9aae-70b77b683694",
+    "customer_id": "082e2608-7e94-4cb2-a7a8-2639b3608048",
+    "account_id": "ab906344-a8ae-4d52-9718-40bfba1c9369",
+    "merchant_id": "b0de9679-97e5-4353-be83-89e1da57fdfe",
+    "amount": 297.18,
+    "timestamp": "2025-04-29T14:49:41.582150",
+    "category": "FOOD",
+    "description": "Normal transaction 1"
+  },
+  {
+    "id": "033e46d4-1f7d-4e5d-bf8e-1ab191a74260",
+    "customer_id": "c3840f60-0217-439f-afa8-59504313c528",
+    "account_id": "22dfff10-a6fc-4e65-bcb3-e25c25b2824f",
+    "merchant_id": "7730107a-655d-45c8-8be3-7b5c781e861f",
+    "amount": 462.09,
+    "timestamp": "2025-04-29T10:04:41.582150",
+    "category": "UTILITY",
+    "description": "Normal transaction 2"
+  },
+  {
+    "id": "b8d0c714-0fd1-4022-b780-1c1fd327ed19",
+    "customer_id": "7454b27c-86e1-4302-b02f-a2fb43e78059",
+    "account_id": "fca428e3-e3f8-4eab-bdda-fb693f340f0a",
+    "merchant_id": "47707166-2979-459c-b017-4c7fbf913f27",
+    "amount": 124.22,
+    "timestamp": "2025-04-29T13:12:41.582150",
+    "category": "RETAIL",
+    "description": "Normal transaction 3"
+  },
+  {
+    "id": "40fd2fab-bdbc-43ec-b437-cabf5fb6a762",
+    "customer_id": "216f7ead-a713-4064-9455-f55cacf5cdd3",
+    "account_id": "394eca22-16f6-4cc4-9052-e29e36f11c9e",
+    "merchant_id": "e5d0a40b-07e4-49ba-a352-3cce7b60f633",
+    "amount": 251.18,
+    "timestamp": "2025-04-29T16:00:41.582150",
+    "category": "UTILITY",
+    "description": "Normal transaction 4"
+  },
+  {
+    "id": "d5a5ff63-68d0-4485-b178-13d3d4ee5eb3",
+    "customer_id": "3cbacb32-d9e8-490b-83ea-f00b8194844b",
+    "account_id": "006a25e7-78e9-4160-b582-0705e6c46c98",
+    "merchant_id": "6b183aa0-95cc-4a27-9487-bd72f6764760",
+    "amount": 80.07,
+    "timestamp": "2025-04-29T09:16:41.582150",
+    "category": "RETAIL",
+    "description": "Normal transaction 5"
+  },
+  {
+    "id": "213a9c1b-9f2e-4313-9b29-5401e299300f",
+    "customer_id": "c4ec2e19-cdb0-4c68-90fb-e004609725db",
+    "account_id": "0ba184f8-5e76-4a71-ab98-972f5d6a85b3",
+    "merchant_id": "7e9204dd-5bb6-4280-8f6d-4e6b3b28108f",
+    "amount": 9259.61,
+    "timestamp": "2025-04-29T23:58:41.582150",
+    "category": "LUXURY",
+    "description": "Highly suspicious transaction 1"
+  },
+  {
+    "id": "32645662-ae9a-4e2e-8ae1-8432bdb059a9",
+    "customer_id": "c4ec2e19-cdb0-4c68-90fb-e004609725db",
+    "account_id": "0ba184f8-5e76-4a71-ab98-972f5d6a85b3",
+    "merchant_id": "19ab3b7a-861f-4d70-ae86-980f99232fd9",
+    "amount": 11518.84,
+    "timestamp": "2025-04-29T01:38:41.582150",
+    "category": "CRYPTO",
+    "description": "Highly suspicious transaction 2"
+  },
+  {
+    "id": "545a0b3d-52be-4dc7-a4a3-58087c84d1a6",
+    "customer_id": "c4ec2e19-cdb0-4c68-90fb-e004609725db",
+    "account_id": "0ba184f8-5e76-4a71-ab98-972f5d6a85b3",
+    "merchant_id": "9d4712ee-0666-48f7-9af7-798332c6f4b1",
+    "amount": 18941.37,
+    "timestamp": "2025-04-29T22:39:41.582150",
+    "category": "GAMBLING",
+    "description": "Highly suspicious transaction 3"
+  },
+  {
+    "id": "e2eee215-25a5-4b0d-8cff-0ea940c5fe73",
+    "customer_id": "c4ec2e19-cdb0-4c68-90fb-e004609725db",
+    "account_id": "0ba184f8-5e76-4a71-ab98-972f5d6a85b3",
+    "merchant_id": "f3c23d78-2b27-4151-8712-c703eacff609",
+    "amount": 15367.6,
+    "timestamp": "2025-04-29T23:53:41.582150",
+    "category": "GAMBLING",
+    "description": "Highly suspicious transaction 4"
+  },
+  {
+    "id": "c1decb27-ea33-47c2-9e40-e56b0e63e8b9",
+    "customer_id": "c4ec2e19-cdb0-4c68-90fb-e004609725db",
+    "account_id": "0ba184f8-5e76-4a71-ab98-972f5d6a85b3",
+    "merchant_id": "f42291a3-4f21-4c76-8754-000b045d89d0",
+    "amount": 10687.53,
+    "timestamp": "2025-04-29T01:38:41.582150",
+    "category": "CRYPTO",
+    "description": "Highly suspicious transaction 5"
+  }
+]
